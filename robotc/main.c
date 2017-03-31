@@ -1,6 +1,5 @@
 #pragma config(Sensor, S1,     light1,         sensorLightActive)
 #pragma config(Sensor, S2,     light2,         sensorColorNxtRED)
-#pragma config(Sensor, S3,     sound,          sensorSoundDB)
 #pragma config(Sensor, S4,     sonar,          sensorSONAR)
 #pragma config(Motor,  motorA,          leopold,       tmotorNXT, PIDControl, encoder)
 #pragma config(Motor,  motorB,          rightMotor,    tmotorNXT, PIDControl, driveRight, encoder)
@@ -12,114 +11,87 @@
 
 #pragma platform(NXT)
 
+#include "remote_control.c";
+
 long nLastXmitTimeStamp = nPgmTime;
-long nDeltaTime         = 0;
+long nDeltaTime = 0;
 
 const int kMaxSizeOfMessage = 30;
 const int INBOX = 5;
 
-char richting()
+
+// Controleert of er een object voor het apparaat staat.
+void measure_sonar()
 {
-  TFileIOResult nBTCmdRdErrorStatus;
-  int nSizeOfMessage;
-  ubyte nRcvBuffer[kMaxSizeOfMessage];
-
-  while (true)
-  {
-    // Check to see if a message is available
-    nSizeOfMessage = cCmdMessageGetSize(INBOX);
-
-    if (nSizeOfMessage > kMaxSizeOfMessage)
-      nSizeOfMessage = kMaxSizeOfMessage;
-    if (nSizeOfMessage > 0){
-    	nBTCmdRdErrorStatus = cCmdMessageRead(nRcvBuffer, nSizeOfMessage, INBOX);
-    	nRcvBuffer[nSizeOfMessage] = '\0';
-    	string s = "";
-    	stringFromChars(s, (char *) nRcvBuffer);
-    	displayCenteredBigTextLine(4, s);
-    	if(s == "LEFT")
-  			return('L');
-  		else if(s == "RIGHT")
-  			return('R');
-  		else if (s == "DOWN")
-  			return('B');
-  		else
-  			return('F');
-    }
-    wait1Msec(100);
-  }
+	int ultrasonic = SensorValue[S4];
+	nxtDisplayString(2, "snr value: %d", ultrasonic);
 }
+
+
+// Handmatige besturing via bluetooth.
+void remote_control()
+{
+	TFileIOResult nBTCmdRdErrorStatus;
+	int nSizeOfMessage;
+	ubyte nRcvBuffer[kMaxSizeOfMessage];
+
+	while(1){
+		nSizeOfMessage = cCmdMessageGetSize(INBOX);
+
+		if (nSizeOfMessage > kMaxSizeOfMessage)
+			nSizeOfMessage = kMaxSizeOfMessage;
+		if (nSizeOfMessage > 0){
+			nBTCmdRdErrorStatus = cCmdMessageRead(nRcvBuffer, nSizeOfMessage, INBOX);
+			nRcvBuffer[nSizeOfMessage] = '\0';
+			string input = "";
+			stringFromChars(input, (char *) nRcvBuffer);
+			displayCenteredBigTextLine(4, input);
+
+			switch(input){
+				case "LEFT":
+					turn_left();
+					break;
+
+				case "RIGHT":
+					turn_right();
+					break;
+
+				case "DOWN":
+					turn_backward();
+					break;
+
+				case "UP":
+					move_forward();
+					break;
+
+				case "FIRE":
+					// Vuurt een elastiekje af.
+					break;
+
+				case "A":
+					// Terug naar automatisch.
+					stop_motor();
+					break;
+			}
+		}
+	}
+}
+
+
+// Volgt de zwarte lijn automatisch.
+void follow_line()
+{
+	measure_sonar();
+	if (kruispunt){
+		remote_control();
+	}
+}
+
 
 task main()
 {
-  while(1)
-  {
-    int light_right = SensorValue[S1];
-    int light_left = SensorValue[S2];
-    int ultrasonic = SensorValue[S4];
-
-    nxtDisplayString(1, "value rechts: %d", light_right);
-    nxtDisplayString(0, "value links: %d", light_left);
-    nxtDisplayString(2, "snr value: %d", ultrasonic);
-
-   	motor[motorB] = (5*(light_right-light_left*0.5-21));
-		motor[motorC] = (5*(light_left-light_right*0.5-21));
-
-		if(light_right < 37 && light_left < 37)
-		/*{
-			while(light_right < 60)// herhalen tot licht kleiner is dan 60 (oftewel wit)
-			{
-				light_right = sensorValue[S1]; // inlezen lichtwaarde rechts
-				nxtDisplayString(1, "value rechts: %d", light_right); // weergeven op de tweede line op de terminal van de NXT
-				motor[motorC] = 0; // motorsnelheid op 0
-				motor[motorB] = 30; // motorsnelheid b op 30
-				wait1Msec(1); // wacht 1 ms
-			}
-		}*/
-		{
-			motor[motorB] = 0;
-			motor[motorC] = 0;
-    	if(richting() == 'L') // Alle for loops versnellen wiel X in richting Y tot 20 en draaien daarna voor 1 seconde op die snelheid door. Daarna gaat de standaardfunctie weer verder
-    	{
-    		for(int i = 0; i <= 20; i++)
-   			{
-    			motor[motorC] = 0;
-    			motor[motorB] = i;
-    			wait10Msec(5);
-    		}
-    		wait10Msec(200);
-    	}
-    	else if(richting() == 'R')
-    	{
-    		for(int i = 0; i <= 20; i++)
-   			{
-    			motor[motorC] = i;
-    			motor[motorB] = 0;
-    			wait10Msec(5);
-    		}
-    		wait10Msec(200);
-    	}
-    	else if (richting() == 'B')
-   		{
-   			for(int i = 0; i <= 20; i++)
-   			{
-    			motor[motorC] = -i;
-    			motor[motorB] = i;
-    			wait10Msec(5);
-    		}
-    		wait10Msec(200);
-    	}
-    	else
-    	{
-    		for(int i = 0; i <= 30; i++)
-   			{
-    			motor[motorC] = i;
-    			motor[motorB] = i;
-    			wait10Msec(5);
-    		}
-    		wait10Msec(200);
-    	}
-  	}
-  wait1Msec(1);
-  }
+	while(1){
+		follow_line();
+		wait1Msec(1);
+	}
 }
