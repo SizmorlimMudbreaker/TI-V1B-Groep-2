@@ -50,5 +50,4 @@ void stop_motor()
     motor[motorB] = i;
     wait10Msec(5);
   }
-  wait10Msec(130);
 }
