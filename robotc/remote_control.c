@@ -6,7 +6,7 @@ void turn_left()
     motor[motorB] = i;
     wait10Msec(5);
   }
-  wait10Msec(150);
+  wait10Msec(130);
 }
 
 void turn_right()
@@ -17,7 +17,7 @@ void turn_right()
     motor[motorB] = 0;
     wait10Msec(5);
   }
-  wait10Msec(150);
+  wait10Msec(130);
 }
 
 void move_forward()
@@ -28,7 +28,7 @@ void move_forward()
     motor[motorB] = i;
     wait10Msec(5);
   }
-  wait10Msec(150);
+  wait10Msec(130);
 }
 
 void turn_backward()
@@ -39,7 +39,7 @@ void turn_backward()
     motor[motorB] = i;
     wait10Msec(5);
   }
-  wait10Msec(150);
+  wait10Msec(130);
 }
 
 void stop_motor()
@@ -50,5 +50,5 @@ void stop_motor()
     motor[motorB] = i;
     wait10Msec(5);
   }
-  wait10Msec(150);
+  wait10Msec(130);
 }
