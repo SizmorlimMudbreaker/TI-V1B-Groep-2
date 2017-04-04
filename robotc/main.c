@@ -21,10 +21,20 @@ const int INBOX = 5;
 
 
 // Controleert of er een object voor het apparaat staat.
-void measure_sonar()
+void measure_sonar(int sensor_value)
 {
-	int ultrasonic = SensorValue[S4];
-	nxtDisplayString(2, "snr value: %d", ultrasonic);
+	if(sensor_value <= 15)
+	{
+		for(int i = 20; 0 <= i; --i)
+		{
+			motor(motorB) = i;
+			motor(motorC) = i;
+			wait10Msec(5);
+		}
+		motor(motorA) = 2;
+		wait10Msec(600);
+		motor(motorA) = 0;
+	}
 }
 
 
@@ -81,10 +91,15 @@ void remote_control()
 // Volgt de zwarte lijn automatisch.
 void follow_line()
 {
-	measure_sonar();
-	if (kruispunt){
+	int light_right = SensorValue[S1];
+	int light_left = SensorValue[S2];
+	int ultrasonic = SensorValue[S4];
+	motor[motorB] = (2*(light_right-light_left*0.5-15));
+	motor[motorC] = (2*(light_left-light_right*0.5-15));
+	if(light_right < 37 && light_left < 37){
 		remote_control();
 	}
+	measure_sonar(ultrasonic);
 }
 
 
