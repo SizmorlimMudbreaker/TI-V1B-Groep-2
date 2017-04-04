@@ -109,8 +109,10 @@ void follow_line()
 task main()
 {
 	while(1){
-		if(remote_control == false){
+		if(remote_control() == false){
 			stop_motor()
+			while(remote_control() == false){
+			}
 		}
 		follow_line();
 		wait1Msec(1);
