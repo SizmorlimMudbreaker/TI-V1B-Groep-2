@@ -44,7 +44,7 @@ void turn_backward()
 
 void stop_motor()
 {
-	for(int i = 20; 0 < i; i--)
+  for(int i = 20; 0 < i; i--)
   {
     motor[motorC] = i;
     motor[motorB] = i;
