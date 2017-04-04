@@ -55,9 +55,9 @@ void switch_mode()
 			
 			if(input == "B"){
 				toggle_mode = true;
-				displayCenteredBigTextLine(4, "start remote");
+				nxtDisplayCenteredTextLine(4, "start remote");
 			} else if(input == "C"){
-				displayCenteredBigTextLine(4, "stop remote");
+				nxtDisplayCenteredTextLine(4, "stop remote");
 			}
 		}
   }
