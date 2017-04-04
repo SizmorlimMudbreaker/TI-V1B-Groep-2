@@ -19,14 +19,14 @@ long nDeltaTime = 0;
 const int kMaxSizeOfMessage = 30;
 const int INBOX = 5;
 
+// Toggle tussen automatisch en handmatig.
+bool toggle_mode = false;
 
 // Controleert of er een object voor het apparaat staat.
 void measure_sonar(int sensor_value)
 {
-	if(sensor_value <= 15)
-	{
-		for(int i = 20; 0 <= i; --i)
-		{
+	if(sensor_value <= 15){
+		for(int i = 20; 0 <= i; --i){
 			motor(motorB) = i;
 			motor(motorC) = i;
 			wait10Msec(5);
@@ -37,17 +37,40 @@ void measure_sonar(int sensor_value)
 	}
 }
 
-
-// Handmatige besturing via bluetooth.
-bool remote_control()
+// Toggle tussen automatisch en handmatig.
+void switch_mode()
 {
 	TFileIOResult nBTCmdRdErrorStatus;
 	int nSizeOfMessage;
 	ubyte nRcvBuffer[kMaxSizeOfMessage];
-
+	
 	while(1){
-		nSizeOfMessage = cCmdMessageGetSize(INBOX);
+		if (nSizeOfMessage > kMaxSizeOfMessage)
+			nSizeOfMessage = kMaxSizeOfMessage;
+		if (nSizeOfMessage > 0){
+			nBTCmdRdErrorStatus = cCmdMessageRead(nRcvBuffer, nSizeOfMessage, INBOX);
+			nRcvBuffer[nSizeOfMessage] = '\0';
+			string input = "";
+			stringFromChars(input, (char *) nRcvBuffer);
+			
+			if(input == "B"){
+				toggle_mode = true;
+				displayCenteredBigTextLine(4, "start remote");
+			} else if(input == "C"){
+				displayCenteredBigTextLine(4, "stop remote");
+			}
+		}
+  }
+}
 
+// Handmatige besturing via bluetooth.
+void remote_control()
+{
+	TFileIOResult nBTCmdRdErrorStatus;
+	int nSizeOfMessage;
+	ubyte nRcvBuffer[kMaxSizeOfMessage];
+	
+	while(1){
 		if (nSizeOfMessage > kMaxSizeOfMessage)
 			nSizeOfMessage = kMaxSizeOfMessage;
 		if (nSizeOfMessage > 0){
@@ -56,35 +79,19 @@ bool remote_control()
 			string input = "";
 			stringFromChars(input, (char *) nRcvBuffer);
 			displayCenteredBigTextLine(4, input);
-
-			switch(input){
-				case "LEFT":
-					turn_left();
-					return;
-
-				case "RIGHT":
-					turn_right();
-					return;
-
-				case "DOWN":
-					turn_backward();
-					return;
-
-				case "UP":
-					move_forward();
-					return;
-
-				case "FIRE":
-					// Vuurt een elastiekje af.
-					return;
-
-				case "A":
-					// Naar handmatig.
-					return(false);
-					
-				case "B":
-					return(true);
-					// Terug naar automatisch.
+			
+			if(input == "LEFT"){
+				turn_left();
+			} else if(input == "RIGHT"){
+				turn_right();
+			} else if(input == "DOWN"){
+				turn_backward();
+			} else if(input == "UP"){
+				move_forward();
+			} else if(input == "A"){
+				stop_motor();
+			} else if(input == "FIRE"){
+				// Vuurt een elastiekje af.
 			}
 		}
 	}
@@ -97,11 +104,15 @@ void follow_line()
 	int light_right = SensorValue[S1];
 	int light_left = SensorValue[S2];
 	int ultrasonic = SensorValue[S4];
+	
 	motor[motorB] = (2*(light_right-light_left*0.5-15));
 	motor[motorC] = (2*(light_left-light_right*0.5-15));
-	if(light_right < 37 && light_left < 37){
-		remote_control();
-	}
+	
+	//if(light_right < 37 && light_left < 37){
+	//	stop_motor();
+	//	remote_control();
+	//}
+	
 	measure_sonar(ultrasonic);
 }
 
@@ -109,12 +120,12 @@ void follow_line()
 task main()
 {
 	while(1){
-		if(remote_control() == false){
-			stop_motor()
-			while(remote_control() == false){
-			}
+		switch_mode();
+		if(toggle_mode == true){
+			remote_control();
+		} else {
+			follow_line();
 		}
-		follow_line();
 		wait1Msec(1);
 	}
 }
