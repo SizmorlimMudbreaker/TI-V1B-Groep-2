@@ -39,7 +39,7 @@ void measure_sonar(int sensor_value)
 
 
 // Handmatige besturing via bluetooth.
-void remote_control()
+bool remote_control()
 {
 	TFileIOResult nBTCmdRdErrorStatus;
 	int nSizeOfMessage;
@@ -60,28 +60,31 @@ void remote_control()
 			switch(input){
 				case "LEFT":
 					turn_left();
-					break;
+					return;
 
 				case "RIGHT":
 					turn_right();
-					break;
+					return;
 
 				case "DOWN":
 					turn_backward();
-					break;
+					return;
 
 				case "UP":
 					move_forward();
-					break;
+					return;
 
 				case "FIRE":
 					// Vuurt een elastiekje af.
-					break;
+					return;
 
 				case "A":
+					// Naar handmatig.
+					return(false);
+					
+				case "B":
+					return(true);
 					// Terug naar automatisch.
-					stop_motor();
-					break;
 			}
 		}
 	}
@@ -106,6 +109,9 @@ void follow_line()
 task main()
 {
 	while(1){
+		if(remote_control == false){
+			stop_motor()
+		}
 		follow_line();
 		wait1Msec(1);
 	}
