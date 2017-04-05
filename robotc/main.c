@@ -47,8 +47,10 @@ task follow_line()
 		motor[motorB] = (3*(light_right-light_left*0.5-22));
 		motor[motorC] = (3*(light_left-light_right*0.5-22));
 		
-		if(light_right < 37 && light_left < 37){
+		// Kruispunt
+		if((light_right < 37) && (light_left < 37)){
 			stop_motor();
+			startTask(remote_control);
 			break;
 		}
 		
