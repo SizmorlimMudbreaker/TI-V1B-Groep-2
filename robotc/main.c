@@ -29,13 +29,14 @@ void measure_sonar(int sensor_value)
 		for(int i = 20; 0 <= i; --i){
 			motor(motorB) = i;
 			motor(motorC) = i;
-			wait10Msec(5);
+			wait1Msec(50);
 		}
 		motor(motorA) = 2;
-		wait10Msec(600);
+		wait1Msec(6000);
 		motor(motorA) = 0;
 	}
 }
+
 
 // Toggle tussen automatisch en handmatig.
 void switch_mode()
@@ -45,8 +46,10 @@ void switch_mode()
 	ubyte nRcvBuffer[kMaxSizeOfMessage];
 	
 	while(1){
-		if (nSizeOfMessage > kMaxSizeOfMessage)
+		if (nSizeOfMessage > kMaxSizeOfMessage) {
 			nSizeOfMessage = kMaxSizeOfMessage;
+		}
+		
 		if (nSizeOfMessage > 0){
 			nBTCmdRdErrorStatus = cCmdMessageRead(nRcvBuffer, nSizeOfMessage, INBOX);
 			nRcvBuffer[nSizeOfMessage] = '\0';
@@ -60,8 +63,9 @@ void switch_mode()
 				nxtDisplayCenteredTextLine(4, "stop remote");
 			}
 		}
-  }
+	}
 }
+
 
 // Handmatige besturing via bluetooth.
 void remote_control()
@@ -71,8 +75,10 @@ void remote_control()
 	ubyte nRcvBuffer[kMaxSizeOfMessage];
 	
 	while(1){
-		if (nSizeOfMessage > kMaxSizeOfMessage)
+		if (nSizeOfMessage > kMaxSizeOfMessage) {
 			nSizeOfMessage = kMaxSizeOfMessage;
+		}
+		
 		if (nSizeOfMessage > 0){
 			nBTCmdRdErrorStatus = cCmdMessageRead(nRcvBuffer, nSizeOfMessage, INBOX);
 			nRcvBuffer[nSizeOfMessage] = '\0';
