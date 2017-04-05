@@ -35,27 +35,35 @@ void scan_for_object(int sensor_value)
 	}
 }
 
-
-// Volgt de zwarte lijn automatisch.
-task follow_line()
+// Ask for user input.
+void ask_user_input()
 {
-	while(1){	
-		int light_right = SensorValue[S1];
-		int light_left = SensorValue[S2];
-		int ultrasonic = SensorValue[S4];
+	TFileIOResult nBTCmdRdErrorStatus;
+	int nSizeOfMessage;
+	ubyte nRcvBuffer[kMaxSizeOfMessage];
+
+	nSizeOfMessage = cCmdMessageGetSize(INBOX);
+	
+	if (nSizeOfMessage > kMaxSizeOfMessage) {
+		nSizeOfMessage = kMaxSizeOfMessage;
+	}
+
+	if (nSizeOfMessage > 0){
+		nBTCmdRdErrorStatus = cCmdMessageRead(nRcvBuffer, nSizeOfMessage, INBOX);
+		nRcvBuffer[nSizeOfMessage] = '\0';
+		string input = "";
+		stringFromChars(input, (char *) nRcvBuffer);
+		displayCenteredBigTextLine(5, input);
 		
-		motor[motorB] = (3*(light_right-light_left*0.5-22));
-		motor[motorC] = (3*(light_left-light_right*0.5-22));
-		
-		// Kruispunt
-		if((light_right < 37) && (light_left < 37)){
-			stop_motor();
-			startTask(remote_control);
-			break;
+		if(input == "LEFT"){
+			turn_left();
+		} else if(input == "RIGHT"){
+			turn_right();
+		} else if(input == "DOWN"){
+			turn_backward();
+		} else if(input == "UP"){
+			move_forward();
 		}
-		
-		scan_for_object(ultrasonic);
-		wait1Msec(1);
 	}
 }
 
@@ -99,6 +107,30 @@ task remote_control()
 }
 
 
+// Volgt de zwarte lijn automatisch.
+task follow_line()
+{
+	while(1){	
+		int light_right = SensorValue[S1];
+		int light_left = SensorValue[S2];
+		int ultrasonic = SensorValue[S4];
+		
+		motor[motorB] = (3*(light_right-light_left*0.5-22));
+		motor[motorC] = (3*(light_left-light_right*0.5-22));
+		
+		// Kruispunt
+		if((light_right < 37) && (light_left < 37)){
+			stop_motor();
+			ask_user_input();
+			//wait1Msec(50);
+		}
+		
+		scan_for_object(ultrasonic);
+		wait1Msec(1);
+	}
+}
+
+
 // Toggle tussen automatisch en handmatig.
 void switch_mode()
 {
@@ -123,12 +155,12 @@ void switch_mode()
 				stopTask(follow_line);
 				stop_motor();
 				startTask(remote_control);
-				displayCenteredBigTextLine(4, "start remote");
+				displayCenteredTextLine(4, "start remote");
 			} else if(input == "C"){
 				stopTask(remote_control);
 				stop_motor();
 				startTask(follow_line);
-				displayCenteredBigTextLine(4, "stop remote");
+				displayCenteredTextLine(4, "start automatic");
 			}
 		}
 	}
