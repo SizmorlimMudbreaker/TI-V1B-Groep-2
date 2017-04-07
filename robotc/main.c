@@ -9,14 +9,9 @@
 // Links 34, 67, S2
 // Rechts 35, 66, S1
 
-#pragma platform(NXT)
+#pragma platform(NXT);
 
 #include "remote_control.c";
-
-/*
-long nLastXmitTimeStamp = nPgmTime;
-long nDeltaTime = 0;
-*/
 
 const int kMaxSizeOfMessage = 30;
 const int INBOX = 5;
@@ -31,7 +26,7 @@ void scan_for_object(int sensor_value)
 }
 
 // Ask for user input.
-void ask_direction()
+int ask_direction()
 {
 	TFileIOResult nBTCmdRdErrorStatus;
 	int nSizeOfMessage;
@@ -52,14 +47,17 @@ void ask_direction()
 
 		if(input == "LEFT"){
 			turn_left();
+			return 1;
 		} else if(input == "RIGHT"){
 			turn_right();
-		} else if(input == "DOWN"){
-			turn_backwards();
+			return 1;
 		} else if(input == "UP"){
 			move_forward();
+			return 1;
 		}
 	}
+
+	return 0;
 }
 
 
@@ -106,18 +104,32 @@ task remote_control()
 // Volgt de zwarte lijn automatisch.
 task follow_line()
 {
-	while(1){
-		int light_right = SensorValue[S1];
-		int light_left = SensorValue[S2];
-		int ultrasonic = SensorValue[S4];
+	int light_right,
+			light_left,
+			ultrasonic;
 
-		motor[motorB] = (3*(light_right-light_left*0.5-22));
-		motor[motorC] = (3*(light_left-light_right*0.5-22));
+	while(1){
+		light_right = SensorValue[S1];
+		light_left = SensorValue[S2];
+		ultrasonic = SensorValue[S4];
+
+		motor[motorB] = (3*(light_right-light_left*0.5-18));
+		motor[motorC] = (3*(light_left-light_right*0.5-18));
 
 		// Kruispunt
-		if((light_right < 37) && (light_left < 37)){
+		if((light_right < 40) && (light_left < 40)){
 			stop_motor();
-			ask_direction();
+
+			// Loop tot input.
+			while(1){
+				if(ask_direction() == 1) {
+					// Loop tot de lichtwaarden hoger zijn dan 60 (wit).
+					while((SensorValue[S1] < 60) && (SensorValue[S2] < 60)){
+						wait1Msec(10);
+					}
+					break;
+				}
+			}
 		}
 
 		scan_for_object(ultrasonic);
