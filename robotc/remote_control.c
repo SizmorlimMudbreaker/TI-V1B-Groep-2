@@ -1,15 +1,21 @@
 void turn_left()
 {
-	motor[motorB] = 30;
-	motor[motorC] = 0;
-	wait1Msec(50);
+	for(int i = 0; i < 19; i++){
+		motor[motorB] = i;
+		motor[motorC] = -i * 0.55;
+		wait1Msec(50);
+	}
+	wait1Msec(100);
 }
 
 void turn_right()
 {
-	motor[motorB] = 0;
-	motor[motorC] = 30;
-	wait1Msec(50);
+	for(int i = 0; i < 19; i++){
+		motor[motorC] = i;
+		motor[motorB] = -i * 0.55;
+		wait1Msec(50);
+	}
+	wait1Msec(100);
 }
 
 void move_forward()
@@ -27,7 +33,7 @@ void turn_backwards()
 }
 
 void stop_motor()
-{ 
+{
 	motor[motorB] = 0;
 	motor[motorC] = 0;
 	wait1Msec(50);
